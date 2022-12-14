@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">BarQueroIngresso</string>
+    <string name="txt_login">Login</string>
+    <string name="btn_login_enter">Entrar</string>
+    <string name="edit_login_password">Senha</string>
+    <string name="edit_login_user">Usuário</string>
+    <string name="message_error_login">Usuário ou senha inválido</string>
+</resources>
