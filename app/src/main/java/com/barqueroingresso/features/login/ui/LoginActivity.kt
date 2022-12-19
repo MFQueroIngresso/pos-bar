@@ -1,62 +1,79 @@
 package com.barqueroingresso.features.login.ui
 
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
-import androidx.activity.viewModels
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
 import com.barqueroingresso.MainActivity
-import com.barqueroingresso.R
 import com.barqueroingresso.databinding.ActivityLoginBinding
+import com.barqueroingresso.features.login.data.api.RetrofitService
+import com.barqueroingresso.features.login.data.model.LoginRequest
+import com.barqueroingresso.features.login.data.repository.UserRepository
+import com.barqueroingresso.features.login.viewmodel.LoginViewModel
+import com.barqueroingresso.features.login.viewmodel.LoginViewModelFactory
+import com.barqueroingresso.util.Validator
 
-import com.google.android.material.snackbar.Snackbar
+
 
 class LoginActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityLoginBinding
+
+    private lateinit var viewModel: LoginViewModel
+    private val retrofitService = RetrofitService.getInstance()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val viewModel: LoginViewModel by viewModels()
+        viewModel =
+            ViewModelProvider(
+                this,
+                LoginViewModelFactory(UserRepository(retrofitService))
+            )[LoginViewModel::class.java]
 
-        binding.btnLogin.setOnClickListener {
-            val isValid = viewModel.validateCredentials(
-                email = binding.emailEditLogin.text.toString(),
-                password = binding.passwordEditLogin.text.toString()
-            )
-            if (isValid) {
-                binding.btnLogin.isEnabled = false
-                viewModel.login(
-                    email = binding.emailEditLogin .text.toString(),
-                    password = binding.passwordEditLogin.text.toString()
+        setupUi()
+
+    }
+    private fun setupUi() = binding.apply {
+
+        btnLogin.setOnClickListener {
+
+            if (!Validator.validateEmail(emailEditLogin.text.toString())) {
+                emailEditLogin.error = "Preencha o nome corretamente"
+                emailEditLogin.requestFocus()
+                return@setOnClickListener
+            }
+            if (!Validator.validateSenha(passwordEditLogin.text.toString())) {
+                passwordEditLogin.error = "Preencha a senha corretamente"
+                passwordEditLogin.requestFocus()
+                return@setOnClickListener
+            }
+
+            viewModel.login(
+                LoginRequest(
+                    emailEditLogin.text.toString(),
+                    passwordEditLogin.text.toString()
                 )
-                binding.progressBarLogin.visibility = View.VISIBLE
-            } else showErrorMessage(getString(R.string.message_error_login))
+            )
+            binding.progressBar.visibility = View.VISIBLE
+        }
 
-        }
-        viewModel.success.observe(this) {
-            openNextActivity()
-        }
-        viewModel.errorMessages.observe(this) {
-            binding.btnLogin.isEnabled = true
-            showErrorMessage(getString(R.string.message_error_login))
-            binding.progressBarLogin.visibility = View.GONE
-        }
     }
+    override fun onStart() {
+        super.onStart()
+        viewModel.success.observe(this@LoginActivity, Observer {
+            startActivity(Intent(this@LoginActivity, MainActivity::class.java))
+            finish()
+        })
 
-    private fun openNextActivity() {
-        val intent = Intent(this, MainActivity::class.java)
-        startActivity(intent)
-        finish()
-    }
-
-    private fun showErrorMessage(message: String) {
-        Snackbar.make(binding.root, getString(R.string.message_error_login), Snackbar.LENGTH_LONG)
-            .setBackgroundTint(getColor(R.color.error_color))
-            .setActionTextColor(getColor(R.color.white))
-            .show()
+        viewModel.errorMessages.observe(this@LoginActivity, Observer {
+            binding.progressBar.visibility = View.GONE
+            Toast.makeText(this@LoginActivity, it, Toast.LENGTH_SHORT).show()
+        })
     }
 }

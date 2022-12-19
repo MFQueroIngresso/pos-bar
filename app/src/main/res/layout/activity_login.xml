@@ -55,7 +55,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="@string/edit_login_user"
-                android:inputType="textEmailAddress"
+                android:inputType="text"
                 android:lines="1"
                 android:textColorHint="@color/color_grey_darker" />
 
@@ -84,7 +84,6 @@
                 android:hint="@string/edit_login_password"
                 android:inputType="textPassword"
                 android:lines="1"
-                android:maxLength="16"
                 android:textColorHint="@color/color_grey_darker" />
 
 
@@ -110,7 +109,7 @@
 
 
         <ProgressBar
-            android:id="@+id/progress_bar_login"
+            android:id="@+id/progressBar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
